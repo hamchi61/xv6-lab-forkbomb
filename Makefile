@@ -139,6 +139,8 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	#STEP2
+	$U/_sleep\
 
 fs.img: mkfs/mkfs README user/script.sh user/bomb.sh user/4_1.sh user/4_2.sh $(UPROGS)
 	mkfs/mkfs fs.img README user/script.sh user/bomb.sh user/4_1.sh user/4_2.sh $(UPROGS)

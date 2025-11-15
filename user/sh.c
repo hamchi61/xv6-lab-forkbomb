@@ -134,6 +134,12 @@ runcmd(struct cmd *cmd)
 int
 getcmd(char *buf, int nbuf)
 {
+  //STEP2
+  int status;
+  int pid;
+  while ((pid = wait_noblock(&status)) > 0)
+    printf("[bg %d] exited with status %d\n", pid, status);
+  
   write(2, "$ ", 2);
   memset(buf, 0, nbuf);
   gets(buf, nbuf);
@@ -158,6 +164,12 @@ main(void)
 
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
+    //STEP2
+    int status;
+    int pid;
+    while ((pid = wait_noblock(&status)) > 0)
+      printf("[bg %d] exited with status %d\n", pid, status);
+    
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
       buf[strlen(buf)-1] = 0;  // chop \n
