@@ -35,6 +35,15 @@ sys_wait(void)
   return wait(p);
 }
 
+//STEP1
+uint64
+sys_wait_noblock(void)
+{
+  uint64 exit_status;
+  argaddr(0, &exit_status);
+  return wait_noblock(exit_status);
+}
+
 uint64
 sys_sbrk(void)
 {

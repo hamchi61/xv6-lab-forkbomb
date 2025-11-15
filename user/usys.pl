@@ -18,6 +18,8 @@ sub entry {
 entry("fork");
 entry("exit");
 entry("wait");
+#STEP1
+entry("wait_noblock");
 entry("pipe");
 entry("read");
 entry("write");

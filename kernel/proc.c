@@ -434,6 +434,25 @@ wait(uint64 addr)
   }
 }
 
+//STEP1
+int wait_noblock(uint64 exit_status) {
+  // the current process, which is the shell
+  struct proc *p = myproc();
+  // loop through all processes
+  for(struct proc *pp = proc; pp < &proc[NPROC]; pp++){
+    if(pp->parent == p && pp->state == ZOMBIE){
+      int pid = pp->pid;
+      // Get the child's xstate (exit code) to user space:
+      if(copyout(p->pagetable, exit_status, (char *)&pp->xstate, sizeof(int)) < 0)
+        return -1;
+      // Free the process entry from the proc table
+      freeproc(pp);
+      return pid;
+    }
+  }
+  return 0; // no zombie child
+}
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
