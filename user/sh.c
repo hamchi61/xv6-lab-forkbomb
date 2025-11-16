@@ -158,11 +158,36 @@ getcmd(char *buf, int nbuf)
   return 0;
 }
 
-int
-main(void)
+//STEP4
+int getline(int fd,char *buf, int nbuf){
+  int i =0;
+  while(i < nbuf - 1){
+    char c;
+    int n = read(fd,&c,1);
+    if(n<=0){
+      if(i == 0){
+        return -1;
+      }
+      break;
+    }
+    if(c == '\n'){
+      break;
+    }
+    buf[i++] = c;
+  }
+  buf[i] = '\n';
+  buf[i+1] = 0;
+  return 0;
+}
+
+int //STEP4
+main(int argc, char* argv[])
 {
   static char buf[100];
   int fd;
+  //STEP4
+  int script_mode = 0;
+  int script_fd = 0;
 
   //STEP3
   for(int i =0; i < NPROC;i++){
@@ -177,11 +202,43 @@ main(void)
     }
   }
 
-  // Read and run input commands.
-  while(getcmd(buf, sizeof(buf)) >= 0){
+  //STEP4
+  if(argc > 1){
+    script_mode = 1;
+    script_fd = open(argv[1],O_RDONLY);
+    if(script_fd < 0){
+      fprintf(2, "sh: cannot open %s\n", argv[1]);
+      exit(1);
+    }
+  }
+
+  // Read and run input commands. //STEP4
+  while(1){
     //STEP2
     int status;
     int pid;
+
+    //STEP4
+    if(script_mode){
+      if(getline(script_fd,buf,sizeof(buf)) < 0){
+        break;
+      }
+      while ((pid = wait_noblock(&status)) > 0){
+        printf("[bg %d] exited with status %d\n", pid, status);
+        //STEP3
+        for(int i =0;i<NPROC;i++){
+          if(jobs[i]==pid){
+            jobs[i]=0;
+            break;
+          }
+        }
+      }
+    }else {
+      if(getcmd(buf,sizeof(buf)) < 0){
+        break;
+      }
+    }
+
     while ((pid = wait_noblock(&status)) > 0){
       printf("[bg %d] exited with status %d\n", pid, status);
       //STEP3
@@ -192,6 +249,7 @@ main(void)
         }
       }
     }
+    
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
       buf[strlen(buf)-1] = 0;  // chop \n
@@ -258,6 +316,10 @@ main(void)
       
     }
   }
+
+  //STEP4
+  if(script_mode) close(script_fd);
+
   exit(0);
 }
 
