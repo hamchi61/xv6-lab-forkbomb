@@ -284,6 +284,8 @@ main(int argc, char* argv[])
           break;
         }
       }
+
+      sleep(1);
     }
     else{
       int fg_pid = fork1();
