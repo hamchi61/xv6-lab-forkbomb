@@ -3,6 +3,9 @@
 #include "kernel/types.h"
 #include "user/user.h"
 #include "kernel/fcntl.h"
+//STEP3
+#include "kernel/param.h"
+int jobs[NPROC];
 
 // Parsed command representation
 #define EXEC  1
@@ -153,6 +156,11 @@ main(void)
   static char buf[100];
   int fd;
 
+  //STEP3
+  for(int i =0; i < NPROC;i++){
+    jobs[i] = 0;
+  }
+
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
     if(fd >= 3){
@@ -166,14 +174,31 @@ main(void)
     //STEP2
     int status;
     int pid;
-    while ((pid = wait_noblock(&status)) > 0)
+    while ((pid = wait_noblock(&status)) > 0){
       printf("[bg %d] exited with status %d\n", pid, status);
-    
+      //STEP3
+      for(int i =0;i<NPROC;i++){
+        if(jobs[i]==pid){
+          jobs[i]=0;
+          break;
+        }
+      }
+    }
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
       buf[strlen(buf)-1] = 0;  // chop \n
       if(chdir(buf+3) < 0)
         fprintf(2, "cannot cd %s\n", buf+3);
+      continue;
+    }
+
+    //STEP3
+    if(buf[0] == 'j' && buf[1] == 'o' && buf[2] == 'b' && buf[3] == 's' && buf[4] == '\n'){
+      for(int i = 0;i<NPROC;i++){
+        if(jobs[i] !=0){
+          printf("%d\n",jobs[i]);
+        }
+      }
       continue;
     }
     //STEP2
@@ -185,6 +210,14 @@ main(void)
         runcmd(bcmd->cmd);
       }
       printf("[%d]\n", bg_pid);
+
+      //STEP3
+      for(int i = 0; i < NPROC; i++){
+        if(jobs[i] == 0){
+          jobs[i] = bg_pid;
+          break;
+        }
+      }
     }
     else{
       int fg_pid = fork1();
@@ -195,10 +228,24 @@ main(void)
       while((waited_pid = wait(&status)) != fg_pid){
         if(waited_pid > 0){
           printf("[bg %d] exited with status %d\n", waited_pid, status);
+          //STEP3
+          for(int i = 0; i < NPROC; i++){
+            if(jobs[i] == waited_pid){
+              jobs[i] = 0;
+              break;
+            }
+          }
         }
       }
       while ((pid = wait_noblock(&status)) > 0){
         printf("[bg %d] exited with status %d\n", pid, status);
+        //STEP3
+        for(int i = 0; i < NPROC; i++){
+          if(jobs[i] == pid){
+            jobs[i] = 0;
+            break;
+          }
+        }
       }
       
     }
