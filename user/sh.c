@@ -139,9 +139,17 @@ getcmd(char *buf, int nbuf)
   //STEP2
   int status;
   int pid;
-  while ((pid = wait_noblock(&status)) > 0)
+  while ((pid = wait_noblock(&status)) > 0){
     printf("[bg %d] exited with status %d\n", pid, status);
-  
+
+    //STEP3
+    for(int i = 0;i<NPROC;i++){
+      if(jobs[i]==pid){
+        jobs[i] = 0;
+        break;
+      }
+    }
+  }
   write(2, "$ ", 2);
   memset(buf, 0, nbuf);
   gets(buf, nbuf);
